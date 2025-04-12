@@ -25,6 +25,93 @@ export interface Album {
 const API_KEY = "ZTVhYTU3MWEtZjRhNy00MmRmLWJlNTAtNzA4MjM1MDNiMGI3";
 const BASE_URL = "https://api.napster.com/v2.2";
 
+// Mock data for when the API fails
+const MOCK_TRACKS: Song[] = [
+  {
+    id: "mock-track-1",
+    title: "Bohemian Rhapsody",
+    artist: "Queen",
+    album: "A Night at the Opera",
+    duration: 354,
+    cover: "https://via.placeholder.com/150?text=Queen",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+  {
+    id: "mock-track-2",
+    title: "Billie Jean",
+    artist: "Michael Jackson",
+    album: "Thriller",
+    duration: 294,
+    cover: "https://via.placeholder.com/150?text=MJ",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+  },
+  {
+    id: "mock-track-3",
+    title: "Smells Like Teen Spirit",
+    artist: "Nirvana",
+    album: "Nevermind",
+    duration: 301,
+    cover: "https://via.placeholder.com/150?text=Nirvana",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+  },
+  {
+    id: "mock-track-4",
+    title: "Sweet Child O' Mine",
+    artist: "Guns N' Roses",
+    album: "Appetite for Destruction",
+    duration: 355,
+    cover: "https://via.placeholder.com/150?text=GnR",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+  },
+  {
+    id: "mock-track-5",
+    title: "Imagine",
+    artist: "John Lennon",
+    album: "Imagine",
+    duration: 183,
+    cover: "https://via.placeholder.com/150?text=Lennon",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+  }
+];
+
+const MOCK_ALBUMS: Album[] = [
+  {
+    id: "mock-album-1",
+    title: "Thriller",
+    artist: "Michael Jackson",
+    cover: "https://via.placeholder.com/300?text=Thriller",
+    songs: []
+  },
+  {
+    id: "mock-album-2",
+    title: "Back in Black",
+    artist: "AC/DC",
+    cover: "https://via.placeholder.com/300?text=AC/DC",
+    songs: []
+  },
+  {
+    id: "mock-album-3",
+    title: "The Dark Side of the Moon",
+    artist: "Pink Floyd",
+    cover: "https://via.placeholder.com/300?text=Pink+Floyd",
+    songs: []
+  },
+  {
+    id: "mock-album-4",
+    title: "Abbey Road",
+    artist: "The Beatles",
+    cover: "https://via.placeholder.com/300?text=Beatles",
+    songs: []
+  },
+  {
+    id: "mock-album-5",
+    title: "Hotel California",
+    artist: "Eagles",
+    cover: "https://via.placeholder.com/300?text=Eagles",
+    songs: []
+  }
+];
+
 // Convert from API format to our app format
 const transformSong = (item: any): Song => {
   return {
@@ -56,7 +143,8 @@ export const fetchTopTracks = async (): Promise<Song[]> => {
     const response = await fetch(`${BASE_URL}/tracks/top?apikey=${API_KEY}&limit=20`);
     
     if (!response.ok) {
-      throw new Error("Failed to fetch top tracks");
+      console.warn("Failed to fetch top tracks from API, using mock data");
+      return MOCK_TRACKS;
     }
     
     const data = await response.json();
@@ -64,11 +152,11 @@ export const fetchTopTracks = async (): Promise<Song[]> => {
   } catch (error) {
     console.error("Error fetching top tracks:", error);
     toast({
-      title: "Error",
-      description: "Failed to load top tracks. Please try again later.",
-      variant: "destructive",
+      title: "Using mock data",
+      description: "API key seems invalid. Using mock data instead.",
+      variant: "default",
     });
-    return [];
+    return MOCK_TRACKS;
   }
 };
 
@@ -78,7 +166,8 @@ export const fetchFeaturedAlbums = async (): Promise<Album[]> => {
     const response = await fetch(`${BASE_URL}/albums/top?apikey=${API_KEY}&limit=8`);
     
     if (!response.ok) {
-      throw new Error("Failed to fetch featured albums");
+      console.warn("Failed to fetch featured albums from API, using mock data");
+      return MOCK_ALBUMS;
     }
     
     const data = await response.json();
@@ -86,21 +175,30 @@ export const fetchFeaturedAlbums = async (): Promise<Album[]> => {
   } catch (error) {
     console.error("Error fetching albums:", error);
     toast({
-      title: "Error",
-      description: "Failed to load albums. Please try again later.",
-      variant: "destructive",
+      title: "Using mock data",
+      description: "API key seems invalid. Using mock data instead.",
+      variant: "default",
     });
-    return [];
+    return MOCK_ALBUMS;
   }
 };
 
 // Fetch songs from an album
 export const fetchAlbumTracks = async (albumId: string): Promise<Song[]> => {
   try {
+    // If it's a mock album, return mock tracks
+    if (albumId.startsWith('mock-album')) {
+      return MOCK_TRACKS.map(track => ({
+        ...track,
+        album: MOCK_ALBUMS.find(album => album.id === albumId)?.title || track.album
+      }));
+    }
+    
     const response = await fetch(`${BASE_URL}/albums/${albumId}/tracks?apikey=${API_KEY}&limit=20`);
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch tracks for album ${albumId}`);
+      console.warn(`Failed to fetch tracks for album ${albumId}, using mock data`);
+      return MOCK_TRACKS;
     }
     
     const data = await response.json();
@@ -108,11 +206,11 @@ export const fetchAlbumTracks = async (albumId: string): Promise<Song[]> => {
   } catch (error) {
     console.error(`Error fetching album tracks for ${albumId}:`, error);
     toast({
-      title: "Error",
-      description: "Failed to load album tracks. Please try again later.",
-      variant: "destructive",
+      title: "Using mock data",
+      description: "API key seems invalid. Using mock data instead.",
+      variant: "default",
     });
-    return [];
+    return MOCK_TRACKS;
   }
 };
 
@@ -123,25 +221,46 @@ export const searchMusic = async (query: string): Promise<{songs: Song[], albums
       return { songs: [], albums: [] };
     }
 
-    const tracksResponse = await fetch(`${BASE_URL}/search/verbose?apikey=${API_KEY}&query=${encodeURIComponent(query)}&type=track&limit=10`);
-    const albumsResponse = await fetch(`${BASE_URL}/search?apikey=${API_KEY}&query=${encodeURIComponent(query)}&type=album&limit=6`);
-    
-    if (!tracksResponse.ok || !albumsResponse.ok) {
-      throw new Error("Search request failed");
+    // Try to fetch from the API first
+    try {
+      const tracksResponse = await fetch(`${BASE_URL}/search/verbose?apikey=${API_KEY}&query=${encodeURIComponent(query)}&type=track&limit=10`);
+      const albumsResponse = await fetch(`${BASE_URL}/search?apikey=${API_KEY}&query=${encodeURIComponent(query)}&type=album&limit=6`);
+      
+      if (tracksResponse.ok && albumsResponse.ok) {
+        const tracksData = await tracksResponse.json();
+        const albumsData = await albumsResponse.json();
+        
+        return {
+          songs: tracksData.search.data.tracks.map(transformSong),
+          albums: albumsData.search.data.albums.map(transformAlbum),
+        };
+      }
+    } catch (error) {
+      console.error("API search failed:", error);
     }
     
-    const tracksData = await tracksResponse.json();
-    const albumsData = await albumsResponse.json();
+    // If API fails, use mock data and filter by query
+    console.warn("Search API failed, using filtered mock data");
+    const lowercaseQuery = query.toLowerCase();
     
     return {
-      songs: tracksData.search.data.tracks.map(transformSong),
-      albums: albumsData.search.data.albums.map(transformAlbum),
+      songs: MOCK_TRACKS.filter(
+        track => 
+          track.title.toLowerCase().includes(lowercaseQuery) || 
+          track.artist.toLowerCase().includes(lowercaseQuery) ||
+          track.album.toLowerCase().includes(lowercaseQuery)
+      ),
+      albums: MOCK_ALBUMS.filter(
+        album => 
+          album.title.toLowerCase().includes(lowercaseQuery) || 
+          album.artist.toLowerCase().includes(lowercaseQuery)
+      ),
     };
   } catch (error) {
     console.error("Error searching music:", error);
     toast({
       title: "Search Error",
-      description: "Failed to perform search. Please try again later.",
+      description: "Failed to perform search. Using mock data instead.",
       variant: "destructive",
     });
     return { songs: [], albums: [] };

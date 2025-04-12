@@ -2,7 +2,7 @@
 import Sidebar from "@/components/Sidebar";
 import MusicPlayer from "@/components/MusicPlayer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LibraryIcon, Music, PlaylistPlus, Clock } from "lucide-react";
+import { LibraryIcon, Music, ListPlus, Clock, Heart } from "lucide-react";
 
 const Library = () => {
   return (
@@ -19,7 +19,7 @@ const Library = () => {
             </div>
             
             <button className="p-2 text-spotify-lightGray hover:text-spotify-white rounded-full">
-              <PlaylistPlus size={20} />
+              <ListPlus size={20} />
             </button>
           </div>
         </div>

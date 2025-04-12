@@ -25,6 +25,19 @@ export interface Album {
 const API_KEY = "ZTVhYTU3MWEtZjRhNy00MmRmLWJlNTAtNzA4MjM1MDNiMGI3";
 const BASE_URL = "https://api.napster.com/v2.2";
 
+// Better placeholder images for mock data
+const PLACEHOLDER_IMAGES = [
+  "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=300&h=300",
+  "https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=300&h=300",
+  "https://images.unsplash.com/photo-1500673922987-e212871fec22?auto=format&fit=crop&w=300&h=300",
+  "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=300&h=300"
+];
+
+// Get a random placeholder image
+const getRandomPlaceholder = () => {
+  return PLACEHOLDER_IMAGES[Math.floor(Math.random() * PLACEHOLDER_IMAGES.length)];
+};
+
 // Mock data for when the API fails
 const MOCK_TRACKS: Song[] = [
   {
@@ -33,7 +46,7 @@ const MOCK_TRACKS: Song[] = [
     artist: "Queen",
     album: "A Night at the Opera",
     duration: 354,
-    cover: "https://via.placeholder.com/150?text=Queen",
+    cover: getRandomPlaceholder(),
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
@@ -42,7 +55,7 @@ const MOCK_TRACKS: Song[] = [
     artist: "Michael Jackson",
     album: "Thriller",
     duration: 294,
-    cover: "https://via.placeholder.com/150?text=MJ",
+    cover: getRandomPlaceholder(),
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
   },
   {
@@ -51,7 +64,7 @@ const MOCK_TRACKS: Song[] = [
     artist: "Nirvana",
     album: "Nevermind",
     duration: 301,
-    cover: "https://via.placeholder.com/150?text=Nirvana",
+    cover: getRandomPlaceholder(),
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
   },
   {
@@ -60,7 +73,7 @@ const MOCK_TRACKS: Song[] = [
     artist: "Guns N' Roses",
     album: "Appetite for Destruction",
     duration: 355,
-    cover: "https://via.placeholder.com/150?text=GnR",
+    cover: getRandomPlaceholder(),
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
   },
   {
@@ -69,7 +82,7 @@ const MOCK_TRACKS: Song[] = [
     artist: "John Lennon",
     album: "Imagine",
     duration: 183,
-    cover: "https://via.placeholder.com/150?text=Lennon",
+    cover: getRandomPlaceholder(),
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
   }
 ];
@@ -79,60 +92,79 @@ const MOCK_ALBUMS: Album[] = [
     id: "mock-album-1",
     title: "Thriller",
     artist: "Michael Jackson",
-    cover: "https://via.placeholder.com/300?text=Thriller",
+    cover: getRandomPlaceholder(),
     songs: []
   },
   {
     id: "mock-album-2",
     title: "Back in Black",
     artist: "AC/DC",
-    cover: "https://via.placeholder.com/300?text=AC/DC",
+    cover: getRandomPlaceholder(),
     songs: []
   },
   {
     id: "mock-album-3",
     title: "The Dark Side of the Moon",
     artist: "Pink Floyd",
-    cover: "https://via.placeholder.com/300?text=Pink+Floyd",
+    cover: getRandomPlaceholder(),
     songs: []
   },
   {
     id: "mock-album-4",
     title: "Abbey Road",
     artist: "The Beatles",
-    cover: "https://via.placeholder.com/300?text=Beatles",
+    cover: getRandomPlaceholder(),
     songs: []
   },
   {
     id: "mock-album-5",
     title: "Hotel California",
     artist: "Eagles",
-    cover: "https://via.placeholder.com/300?text=Eagles",
+    cover: getRandomPlaceholder(),
     songs: []
   }
 ];
 
 // Convert from API format to our app format
 const transformSong = (item: any): Song => {
+  // Ensure we have a valid cover image
+  let coverUrl;
+  try {
+    if (item.albumId) {
+      coverUrl = `https://api.napster.com/imageserver/v2/albums/${item.albumId}/images/500x500.jpg`;
+    } else {
+      // Use a fallback placeholder if no album ID is available
+      coverUrl = getRandomPlaceholder();
+    }
+  } catch (error) {
+    coverUrl = getRandomPlaceholder();
+  }
+  
   return {
     id: item.id,
     title: item.name,
     artist: item.artistName,
     album: item.albumName || "",
     duration: item.playbackSeconds || 30,
-    cover: item.albumId 
-      ? `https://api.napster.com/imageserver/v2/albums/${item.albumId}/images/500x500.jpg` 
-      : "https://via.placeholder.com/150",
+    cover: coverUrl,
     audioUrl: item.previewURL || `https://listen.hs.llnwd.net/g2/FirstPlay/${item.id}.mp3`,
   };
 };
 
 const transformAlbum = (item: any): Album => {
+  // Ensure we have a valid cover image
+  let coverUrl;
+  try {
+    coverUrl = `https://api.napster.com/imageserver/v2/albums/${item.id}/images/500x500.jpg`;
+  } catch (error) {
+    coverUrl = getRandomPlaceholder();
+  }
+  
   return {
     id: item.id,
     title: item.name,
     artist: item.artistName,
-    cover: `https://api.napster.com/imageserver/v2/albums/${item.id}/images/500x500.jpg`,
+    cover: coverUrl,
     songs: [],
   };
 };

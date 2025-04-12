@@ -45,6 +45,11 @@ const AlbumCard = ({ album, onClick }: AlbumCardProps) => {
     }
   };
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    // Set a fallback image if the original one fails to load
+    e.currentTarget.src = 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=300&h=300';
+  };
+
   return (
     <Card 
       className="bg-spotify-darkGray hover:bg-spotify-darkGray/90 transition-all duration-300 h-full cursor-pointer relative shadow group"
@@ -58,6 +63,7 @@ const AlbumCard = ({ album, onClick }: AlbumCardProps) => {
             src={album.cover} 
             alt={album.title} 
             className="w-full aspect-square object-cover shadow-lg rounded-md"
+            onError={handleImageError}
           />
           
           {isHovering && (

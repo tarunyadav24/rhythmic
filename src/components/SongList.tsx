@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 interface SongListProps {
   songs: Song[];
@@ -24,6 +25,11 @@ const SongList = ({ songs, title }: SongListProps) => {
     } else {
       playQueue(songs, index);
     }
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    // Set a fallback image if the original one fails to load
+    e.currentTarget.src = 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=300&h=300';
   };
 
   if (songs.length === 0) {
@@ -78,7 +84,8 @@ const SongList = ({ songs, title }: SongListProps) => {
                 <img 
                   src={song.cover} 
                   alt={song.title} 
-                  className="h-10 w-10 mr-3 object-cover" 
+                  className="h-10 w-10 mr-3 object-cover rounded-sm bg-spotify-darkGray/30" 
+                  onError={handleImageError}
                 />
                 <div className="truncate">
                   <div className={`font-medium truncate ${isCurrentSong ? 'text-spotify-green' : ''}`}>

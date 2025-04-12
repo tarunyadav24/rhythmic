@@ -23,7 +23,7 @@ const Sidebar = ({ className }: SidebarProps) => {
       {/* Logo */}
       <div className="p-4 flex items-center justify-between">
         {!collapsed && (
-          <span className="text-xl font-bold text-spotify-white">SonicTrack</span>
+          <span className="text-xl font-bold text-spotify-white">Rhythmic</span>
         )}
         <button 
           onClick={() => setCollapsed(!collapsed)} 

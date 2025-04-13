@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Search from "./pages/Search";
 import AlbumPage from "./pages/AlbumPage";
 import Library from "./pages/Library";
+import LikedSongs from "./pages/LikedSongs";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
               <Route path="/album/:id" element={<ProtectedRoute><AlbumPage /></ProtectedRoute>} />
               <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+              <Route path="/liked-songs" element={<ProtectedRoute><LikedSongs /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

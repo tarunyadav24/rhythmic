@@ -1,7 +1,7 @@
 
 import { Song } from "@/lib/musicApi";
 import { usePlayer } from "@/context/PlayerContext";
-import { Play, Pause, MoreHorizontal } from "lucide-react";
+import { Play, Pause, MoreHorizontal, Heart } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import { 
   DropdownMenu,
@@ -9,7 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SongListProps {
   songs: Song[];
@@ -18,6 +19,21 @@ interface SongListProps {
 
 const SongList = ({ songs, title }: SongListProps) => {
   const { play, playQueue, isPlaying, currentSong, togglePlay } = usePlayer();
+  const { toast } = useToast();
+  const [likedSongs, setLikedSongs] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // Load liked songs from localStorage
+    const storedLikedSongs = localStorage.getItem('likedSongs');
+    if (storedLikedSongs) {
+      const songsArray = JSON.parse(storedLikedSongs) as Song[];
+      const likedMap: Record<string, boolean> = {};
+      songsArray.forEach(song => {
+        likedMap[song.id] = true;
+      });
+      setLikedSongs(likedMap);
+    }
+  }, []);
 
   const handlePlaySong = (song: Song, index: number) => {
     if (currentSong?.id === song.id) {
@@ -27,6 +43,28 @@ const SongList = ({ songs, title }: SongListProps) => {
       const songsToPlay = [...songs]; // Create a copy to avoid mutating props
       playQueue(songsToPlay, index);
     }
+  };
+
+  const toggleLikeSong = (song: Song) => {
+    const newLikedSongs = { ...likedSongs };
+    
+    if (newLikedSongs[song.id]) {
+      delete newLikedSongs[song.id];
+      toast({
+        description: `Removed "${song.title}" from your liked songs`,
+      });
+    } else {
+      newLikedSongs[song.id] = true;
+      toast({
+        description: `Added "${song.title}" to your liked songs`,
+      });
+    }
+    
+    setLikedSongs(newLikedSongs);
+    
+    // Update localStorage with the full song objects
+    const likedSongsList = songs.filter(s => newLikedSongs[s.id]);
+    localStorage.setItem('likedSongs', JSON.stringify(likedSongsList));
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -58,6 +96,7 @@ const SongList = ({ songs, title }: SongListProps) => {
         {songs.map((song, index) => {
           const isCurrentSong = currentSong?.id === song.id;
           const isCurrentlyPlaying = isCurrentSong && isPlaying;
+          const isLiked = !!likedSongs[song.id];
           
           return (
             <div 
@@ -103,7 +142,14 @@ const SongList = ({ songs, title }: SongListProps) => {
                 {song.album}
               </div>
               
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => toggleLikeSong(song)} 
+                  className={`opacity-70 hover:opacity-100 transition-opacity ${isLiked ? 'text-spotify-green' : 'text-spotify-lightGray'}`}
+                >
+                  <Heart size={16} fill={isLiked ? "#1DB954" : "none"} />
+                </button>
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="text-spotify-lightGray hover:text-white hover-target">
@@ -116,6 +162,12 @@ const SongList = ({ songs, title }: SongListProps) => {
                       className="cursor-pointer hover:bg-white/10"
                     >
                       Play
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => toggleLikeSong(song)}
+                      className="cursor-pointer hover:bg-white/10"
+                    >
+                      {isLiked ? "Remove from Liked Songs" : "Add to Liked Songs"}
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => navigator.clipboard.writeText(song.title)}

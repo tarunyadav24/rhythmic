@@ -1,12 +1,13 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTopTracks, fetchFeaturedAlbums, Album, Song } from "@/lib/musicApi";
+import { fetchTopTracks, fetchFeaturedAlbums, fetchPopularArtists, Album, Song, Artist } from "@/lib/musicApi";
 import Sidebar from "@/components/Sidebar";
 import MusicPlayer from "@/components/MusicPlayer";
 import SongList from "@/components/SongList";
 import FeaturedContent from "@/components/FeaturedContent";
 import SearchBar from "@/components/SearchBar";
+import PopularArtistsList from "@/components/PopularArtistsList";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -30,6 +31,16 @@ const Index = () => {
   } = useQuery({
     queryKey: ['featuredAlbums'],
     queryFn: fetchFeaturedAlbums,
+  });
+  
+  // Fetch popular artists
+  const {
+    data: popularArtists = [],
+    isLoading: isLoadingArtists,
+    error: artistsError
+  } = useQuery({
+    queryKey: ['popularArtists'],
+    queryFn: fetchPopularArtists,
   });
   
   // Handle search
@@ -81,6 +92,23 @@ const Index = () => {
               </div>
             ) : (
               <FeaturedContent title="Featured Albums" albums={featuredAlbums} />
+            )}
+          </section>
+          
+          {/* Popular Artists */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Popular Artists</h2>
+            
+            {isLoadingArtists ? (
+              <div className="flex justify-center py-10">
+                <div className="h-10 w-10 border-4 border-t-spotify-green border-opacity-50 rounded-full animate-spin"></div>
+              </div>
+            ) : artistsError ? (
+              <div className="text-center py-10 text-red-400">
+                Failed to load popular artists
+              </div>
+            ) : (
+              <PopularArtistsList artists={popularArtists} />
             )}
           </section>
           

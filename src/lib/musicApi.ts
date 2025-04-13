@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 
 // Song interface
@@ -19,6 +18,14 @@ export interface Album {
   artist: string;
   cover: string;
   songs: Song[];
+}
+
+// Artist interface
+export interface Artist {
+  id: string;
+  name: string;
+  imageUrl: string;
+  topTracks: Song[];
 }
 
 // We're using the Napster API for this app
@@ -125,6 +132,110 @@ const MOCK_ALBUMS: Album[] = [
   }
 ];
 
+// Mock popular artists data
+const MOCK_ARTISTS: Artist[] = [
+  {
+    id: "mock-artist-1",
+    name: "Queen",
+    imageUrl: getRandomPlaceholder(),
+    topTracks: [
+      {
+        id: "mock-queen-track-1",
+        title: "Bohemian Rhapsody",
+        artist: "Queen",
+        album: "A Night at the Opera",
+        duration: 354,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      },
+      {
+        id: "mock-queen-track-2",
+        title: "Don't Stop Me Now",
+        artist: "Queen",
+        album: "Jazz",
+        duration: 210,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+      }
+    ]
+  },
+  {
+    id: "mock-artist-2",
+    name: "Michael Jackson",
+    imageUrl: getRandomPlaceholder(),
+    topTracks: [
+      {
+        id: "mock-mj-track-1",
+        title: "Billie Jean",
+        artist: "Michael Jackson",
+        album: "Thriller",
+        duration: 294,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+      },
+      {
+        id: "mock-mj-track-2",
+        title: "Beat It",
+        artist: "Michael Jackson",
+        album: "Thriller",
+        duration: 258,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+      }
+    ]
+  },
+  {
+    id: "mock-artist-3",
+    name: "The Beatles",
+    imageUrl: getRandomPlaceholder(),
+    topTracks: [
+      {
+        id: "mock-beatles-track-1",
+        title: "Hey Jude",
+        artist: "The Beatles",
+        album: "The Beatles Again",
+        duration: 431,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+      },
+      {
+        id: "mock-beatles-track-2",
+        title: "Let It Be",
+        artist: "The Beatles",
+        album: "Let It Be",
+        duration: 243,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+      }
+    ]
+  },
+  {
+    id: "mock-artist-4",
+    name: "Adele",
+    imageUrl: getRandomPlaceholder(),
+    topTracks: [
+      {
+        id: "mock-adele-track-1",
+        title: "Hello",
+        artist: "Adele",
+        album: "25",
+        duration: 367,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+      },
+      {
+        id: "mock-adele-track-2",
+        title: "Rolling in the Deep",
+        artist: "Adele",
+        album: "21",
+        duration: 228,
+        cover: getRandomPlaceholder(),
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+      }
+    ]
+  }
+];
+
 // Convert from API format to our app format
 const transformSong = (item: any): Song => {
   // Ensure we have a valid cover image
@@ -166,6 +277,24 @@ const transformAlbum = (item: any): Album => {
     artist: item.artistName,
     cover: coverUrl,
     songs: [],
+  };
+};
+
+// Transform artist from API format to our app format
+const transformArtist = (item: any): Artist => {
+  // Ensure we have a valid cover image
+  let imageUrl;
+  try {
+    imageUrl = `https://api.napster.com/imageserver/v2/artists/${item.id}/images/500x500.jpg`;
+  } catch (error) {
+    imageUrl = getRandomPlaceholder();
+  }
+  
+  return {
+    id: item.id,
+    name: item.name,
+    imageUrl: imageUrl,
+    topTracks: [], // Tracks will be populated separately
   };
 };
 
@@ -243,6 +372,55 @@ export const fetchAlbumTracks = async (albumId: string): Promise<Song[]> => {
       variant: "default",
     });
     return MOCK_TRACKS;
+  }
+};
+
+// Fetch popular artists and their top tracks
+export const fetchPopularArtists = async (): Promise<Artist[]> => {
+  try {
+    const response = await fetch(`${BASE_URL}/artists/top?apikey=${API_KEY}&limit=4`);
+    
+    if (!response.ok) {
+      console.warn("Failed to fetch popular artists from API, using mock data");
+      return MOCK_ARTISTS;
+    }
+    
+    const data = await response.json();
+    const artists = data.artists.map(transformArtist);
+    
+    // For each artist, fetch their top tracks
+    const artistsWithTracks = await Promise.all(
+      artists.map(async (artist) => {
+        try {
+          const tracksResponse = await fetch(`${BASE_URL}/artists/${artist.id}/tracks/top?apikey=${API_KEY}&limit=2`);
+          
+          if (!tracksResponse.ok) {
+            throw new Error(`Failed to fetch tracks for artist ${artist.id}`);
+          }
+          
+          const tracksData = await tracksResponse.json();
+          artist.topTracks = tracksData.tracks.map(transformSong);
+          return artist;
+        } catch (error) {
+          console.error(`Error fetching tracks for artist ${artist.name}:`, error);
+          
+          // Use mock tracks for this artist
+          const mockArtist = MOCK_ARTISTS.find(a => a.name.toLowerCase() === artist.name.toLowerCase());
+          artist.topTracks = mockArtist ? mockArtist.topTracks : MOCK_TRACKS.slice(0, 2);
+          return artist;
+        }
+      })
+    );
+    
+    return artistsWithTracks;
+  } catch (error) {
+    console.error("Error fetching popular artists:", error);
+    toast({
+      title: "Using mock data",
+      description: "API key seems invalid. Using mock data instead.",
+      variant: "default",
+    });
+    return MOCK_ARTISTS;
   }
 };
 

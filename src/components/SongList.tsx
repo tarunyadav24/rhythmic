@@ -23,7 +23,9 @@ const SongList = ({ songs, title }: SongListProps) => {
     if (currentSong?.id === song.id) {
       togglePlay();
     } else {
-      playQueue(songs, index);
+      // This ensures we're starting from the correct song in the queue
+      const songsToPlay = [...songs]; // Create a copy to avoid mutating props
+      playQueue(songsToPlay, index);
     }
   };
 
@@ -102,9 +104,27 @@ const SongList = ({ songs, title }: SongListProps) => {
               </div>
               
               <div className="flex items-center justify-center">
-                <button className="text-spotify-lightGray hover:text-white hover-target">
-                  <MoreHorizontal size={18} />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="text-spotify-lightGray hover:text-white hover-target">
+                      <MoreHorizontal size={18} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-spotify-darkGray border-spotify-lightGray/20 text-spotify-white">
+                    <DropdownMenuItem 
+                      onClick={() => handlePlaySong(song, index)}
+                      className="cursor-pointer hover:bg-white/10"
+                    >
+                      Play
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigator.clipboard.writeText(song.title)}
+                      className="cursor-pointer hover:bg-white/10"
+                    >
+                      Copy song name
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               
               <div className="flex items-center justify-end text-spotify-lightGray">

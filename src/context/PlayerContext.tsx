@@ -94,10 +94,25 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!audioRef.current || !currentSong) return;
     
     const audio = audioRef.current;
-    audio.src = currentSong.audioUrl;
-    audio.load();
     
-    if (isPlaying) {
+    // Only change the source if we have a new song
+    if (audio.src !== currentSong.audioUrl) {
+      console.log("Loading new song:", currentSong.title);
+      audio.src = currentSong.audioUrl;
+      audio.load();
+      
+      if (isPlaying) {
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            console.error("Playback prevented:", error);
+            setIsPlaying(false);
+          });
+        }
+      }
+    } else if (isPlaying && audio.paused) {
+      // If the source is the same but we should be playing and we're paused, play
       const playPromise = audio.play();
       
       if (playPromise !== undefined) {
@@ -107,7 +122,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
       }
     }
-  }, [currentSong]);
+  }, [currentSong, isPlaying]);
   
   // Update audio volume when volume state changes
   useEffect(() => {
@@ -118,6 +133,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   // Play a specific song
   const play = (song: Song) => {
+    if (!song) return;
+    console.log("Playing single song:", song.title);
     setCurrentSong(song);
     setQueue([song]);
     setQueueIndex(0);
@@ -128,6 +145,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const playQueue = (songs: Song[], startIndex = 0) => {
     if (songs.length === 0) return;
     
+    console.log(`Playing queue starting at index ${startIndex}:`, songs[startIndex].title);
     setQueue(songs);
     setQueueIndex(startIndex);
     setCurrentSong(songs[startIndex]);
